@@ -102,7 +102,6 @@ define oradb::installasm(
       os_group_install     => $group_install,
       download_dir         => $downloadDir,
       log_output           => true,
-      user_base_dir        => $userBaseDir,
     }
 
     if ( $zipExtract ) {
