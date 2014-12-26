@@ -8,6 +8,8 @@ created by Edwin Biemond
 Should work on Docker, for Solaris and on all Linux version like RedHat, CentOS, Ubuntu, Debian, Suse SLES or OracleLinux
 - Docker image of Oracle Database 12.1 SE [Docker Oracle Database 12.1.0.1](https://github.com/biemond/docker-database-puppet)
 - CentOS 6.5 vagrant box with Oracle Database 12.1 and Enterprise Manager 12.1.0.4 [Enterprise vagrant box](https://github.com/biemond/biemond-em-12c)
+- CentOS 6.6 vagrant box with Oracle Database 11.2.0.4 on NFS ASM [ASM vagrant box](https://github.com/biemond/biemond-oradb-vagrant-11.2-ASM)
+- CentOS 6.6 vagrant box with Oracle Database 12.1.0.1 with pluggable databases [12c pluggable db vagrant box](https://github.com/biemond/biemond-oradb-vagrant-12.1-CDB)
 - Solaris 11.2 vagrant box with Oracle Database 12.1 [solaris 11.2 vagrant box](https://github.com/biemond/biemond-oradb-vagrant-12.1-solaris11.2)
 - Solaris 10 vagrant box with Oracle Database 12.1 [solaris 10 vagrant box](https://github.com/biemond/biemond-orawls-vagrant-solaris-soa)
 - CentOS 6.5 vagrant box with Oracle Database 11.2.0.4 and GoldenGate 12.1.2 [coherence goldengate vagrant box]( https://github.com/biemond/vagrant-wls12.1.2-coherence-goldengate)
@@ -22,7 +24,7 @@ Should work for Puppet 2.7 & 3.0
 - Oracle Grid 11.2.0.4, 12.1.0.1 Linux / Solaris installation
 - Oracle Database 12.1.0.1,12.1.0.2 Linux / Solaris installation
 - Oracle Database 11.2.0.1,11.2.0.3,11.2.0.4 Linux / Solaris installation
-- Oracle Database Instance 11.2 & 12.1 or provide your own db template
+- Oracle Database Instance 11.2 & 12.1 with pluggable database or provide your own db template
 - Oracle Database Client 12.1.0.1,12.1.0.2,11.2.0.4,11.2.0.1 Linux / Solaris installation
 - Oracle Database Net configuration
 - Oracle Database Listener
@@ -237,7 +239,7 @@ For opatchupgrade you need to provide the Oracle support csiNumber and supportId
 
 Opatch
 
-    # october 2014 11.2.0.4.4 patch 
+    # october 2014 11.2.0.4.4 patch
     oradb::opatch{'19121551_db_patch':
       ensure                 => 'present',
       oracleProductHome      => hiera('oracle_home_dir'),
@@ -268,7 +270,7 @@ or for clusterware aka opatch auto
       puppetDownloadMntPoint => hiera('oracle_source'),
     }
 
-    # this 19791420 patch contains 2 patches (in different sub folders), one bundle and a normal one. 
+    # this 19791420 patch contains 2 patches (in different sub folders), one bundle and a normal one.
     # we want to apply the bundle and need to provide the right value for bundleSubFolder
     oradb::opatch{'19791420_grid_patch':
       ensure                 => 'present',
@@ -304,7 +306,7 @@ or for clusterware aka opatch auto
       puppetDownloadMntPoint => hiera('oracle_source'),
     }
 
-    # same patch 19791420 but then for the oracle db home, this patch requires the bundle patch of 19791420 or 
+    # same patch 19791420 but then for the oracle db home, this patch requires the bundle patch of 19791420 or
     # 19121551 october 2014  11.2.0.4.4 patch
     oradb::opatch{'19791420_db_patch':
       ensure                 => 'present',
@@ -341,7 +343,7 @@ Listener
       oracleHome   => '/oracle/product/11.2/db',
       user         => 'oracle',
       group        => 'dba',
-      action       => 'start',
+      action       => 'stop',
       require      => Oradb::Net['config net8'],
     }
 
@@ -359,21 +361,23 @@ Database instance
     oradb::database{ 'testDb_Create':
       oracleBase              => '/oracle',
       oracleHome              => '/oracle/product/11.2/db',
-      version                 => '11.2' or "12.1",
+      version                 => '11.2',
       user                    => 'oracle',
       group                   => 'dba',
       downloadDir             => '/install',
       action                  => 'create',
       dbName                  => 'test',
       dbDomain                => 'oracle.com',
-      dbPort                  => '1521', #optional
+      dbPort                  => '1521',
       sysPassword             => 'Welcome01',
       systemPassword          => 'Welcome01',
       dataFileDestination     => "/oracle/oradata",
       recoveryAreaDestination => "/oracle/flash_recovery_area",
       characterSet            => "AL32UTF8",
       nationalCharacterSet    => "UTF8",
-      initParams              => "open_cursors=1000,processes=600,job_queue_processes=4",
+      initParams              => {'open_cursors'        => '1000',
+                                  'processes'           => '600',
+                                  'job_queue_processes' => '4' },
       sampleSchema            => 'TRUE',
       memoryPercentage        => "40",
       memoryTotal             => "800",
@@ -382,10 +386,17 @@ Database instance
       require                 => Oradb::Listener['start listener'],
     }
 
+you can also use a comma separated string for initParams
+
+      initParams              => "open_cursors=1000,processes=600,job_queue_processes=4",
+
+
 or based on your own template
 
-Add your template to the template dir of the oradb module, the template must be have the following extension dbtemplate.dbt.erb
-Click here for an [12.1 db instance template example](https://github.com/biemond/biemond-oradb/blob/master/templates/dbtemplate.dbt.erb)
+Add your template to the template dir of the oradb module, the template must be have the following extension dbt.erb like dbtemplate_12.1.dbt.erb
+Click here for an [12.1 db instance template example](https://github.com/biemond/biemond-oradb/blob/master/templates/dbtemplate_12.1.dbt.erb)
+Click here for an [11.2 db asm instance template example](https://github.com/biemond/biemond-oradb/blob/master/templates/dbtemplate_11gR2_asm.dbt.erb)
+
 
     oradb::database{ 'testDb_Create':
       oracleBase              => '/oracle',
@@ -393,7 +404,7 @@ Click here for an [12.1 db instance template example](https://github.com/biemond
       version                 => '12.1',
       user                    => 'oracle',
       group                   => 'dba',
-      template                => 'dbtemplate', #  this will use dbtemplate.dbt.erb example template
+      template                => 'dbtemplate_12.1', #  this will use dbtemplate_12.1.dbt.erb example template
       downloadDir             => '/install',
       action                  => 'create',
       dbName                  => 'test',
@@ -408,6 +419,63 @@ Click here for an [12.1 db instance template example](https://github.com/biemond
       memoryPercentage        => "40",
       memoryTotal             => "800",
       require                 => Oradb::Listener['start listener'],
+    }
+
+12c container and pluggable databases
+
+    oradb::database{ 'oraDb':
+      oracleBase              => '/oracle',
+      oracleHome              => '/oracle/product/12.1/db',
+      version                 => '12.1',
+      user                    => 'oracle',
+      group                   => 'dba'
+      downloadDir             => '/install',
+      action                  => 'create',
+      dbName                  => 'orcl',
+      dbDomain                => 'example.com',
+      sysPassword             => 'Welcome01',
+      systemPassword          => 'Welcome01',
+      characterSet            => 'AL32UTF8',
+      nationalCharacterSet    => 'UTF8',
+      sampleSchema            => 'FALSE',
+      memoryPercentage        => '40',
+      memoryTotal             => '800',
+      databaseType            => 'MULTIPURPOSE',
+      emConfiguration         => 'NONE',
+      dataFileDestination     => '/oracle/oradata',
+      recoveryAreaDestination => '/oracle/flash_recovery_area',
+      initParams              => {'open_cursors'        => '1000',
+                                  'processes'           => '600',
+                                  'job_queue_processes' => '4' },
+      containerDatabase       => true,   <|-------
+    }
+
+    oradb::database_pluggable{'pdb1':
+      ensure                   => 'present',
+      version                  => '12.1',
+      oracle_home_dir          => '/oracle/product/12.1/db',
+      user                     => 'oracle',
+      group                    => 'dba',
+      source_db                => 'orcl',
+      pdb_name                 => 'pdb1',
+      pdb_admin_username       => 'pdb_adm',
+      pdb_admin_password       => 'Welcome01',
+      pdb_datafile_destination => "/oracle/oradata/orcl/pdb1",
+      create_user_tablespace   => true,
+      log_output               => true,
+    }
+
+    # remove the pluggable database
+    oradb::database_pluggable{'pdb1':
+      ensure                   => 'absent',
+      version                  => '12.1',
+      oracle_home_dir          => '/oracle/product/12.1/db',
+      user                     => 'oracle',
+      group                    => 'dba',
+      source_db                => 'orcl',
+      pdb_name                 => 'pdb1',
+      pdb_datafile_destination => "/oracle/oradata/orcl/pdb1",
+      log_output               => true,
     }
 
 or delete a database
@@ -535,7 +603,7 @@ Tnsnames.ora
 
       ####### NFS example
 
-      file { '/nfs_server_data':
+      file { '/home/nfs_server_data':
         ensure  => directory,
         recurse => false,
         replace => false,
@@ -551,10 +619,10 @@ Tnsnames.ora
         enable  => true,
       }
 
-      nfs::export { '/nfs_server_data':
+      nfs::export { '/home/nfs_server_data':
         options => [ 'rw', 'sync', 'no_wdelay','insecure_locks','no_root_squash' ],
         clients => [ "*" ],
-        require => File['/nfs_server_data']
+        require => [File['/home/nfs_server_data'],Class['nfs::server'],],
       }
 
       file { '/nfs_client':
@@ -568,11 +636,12 @@ Tnsnames.ora
       }
 
       mounts { 'Mount point for NFS data':
-        ensure => present,
-        source => 'soadbasm:/nfs_server_data',
-        dest   => '/nfs_client',
-        type   => 'nfs',
-        opts   => 'rw,bg,hard,nointr,tcp,vers=3,timeo=600,rsize=32768,wsize=32768,actimeo=0  0 0',
+        ensure  => present,
+        source  => 'soadbasm:/home/nfs_server_data',
+        dest    => '/nfs_client',
+        type    => 'nfs',
+        opts    => 'rw,bg,hard,nointr,tcp,vers=3,timeo=600,rsize=32768,wsize=32768,actimeo=0  0 0',
+        require => [File['/nfs_client'],Nfs::Export['/home/nfs_server_data'],]
       }
 
       exec { "/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b1 bs=1M count=7520":
@@ -591,17 +660,35 @@ Tnsnames.ora
                       Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b1 bs=1M count=7520"]],
       }
 
-      exec { "/bin/chown grid:asmadmin /nfs_client/*":
-        user      => 'root',
-        group     => 'root',
+      exec { "/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b3 bs=1M count=7520":
+        user      => 'grid',
+        group     => 'asmadmin',
         logoutput => true,
-        require   => Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b2 bs=1M count=7520"],
+        unless    => "/usr/bin/test -f /nfs_client/asm_sda_nfs_b3",
+        require   => [Mounts['Mount point for NFS data'],
+                      Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b1 bs=1M count=7520"],
+                      Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b2 bs=1M count=7520"],],
       }
-      exec { "/bin/chmod 664 /nfs_client/*":
-        user      => 'root',
-        group     => 'root',
+
+      exec { "/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b4 bs=1M count=7520":
+        user      => 'grid',
+        group     => 'asmadmin',
         logoutput => true,
-        require   => Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b2 bs=1M count=7520"],
+        unless    => "/usr/bin/test -f /nfs_client/asm_sda_nfs_b4",
+        require   => [Mounts['Mount point for NFS data'],
+                      Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b1 bs=1M count=7520"],
+                      Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b2 bs=1M count=7520"],
+                      Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b3 bs=1M count=7520"],],
+      }
+
+      $nfs_files = ['/nfs_client/asm_sda_nfs_b1','/nfs_client/asm_sda_nfs_b2','/nfs_client/asm_sda_nfs_b3','/nfs_client/asm_sda_nfs_b4']
+
+      file { $nfs_files:
+        ensure  => present,
+        owner   => 'grid',
+        group   => 'asmadmin',
+        mode    => '0664',
+        require => Exec["/bin/dd if=/dev/zero of=/nfs_client/asm_sda_nfs_b4 bs=1M count=7520"],
       }
       ###### end of NFS example
 
@@ -726,6 +813,36 @@ Tnsnames.ora
         puppetDownloadMntPoint => hiera('oracle_source'),
       }
 
+      # based on a template
+      oradb::database{ 'oraDb':
+        oracleBase              => hiera('oracle_base_dir'),
+        oracleHome              => hiera('oracle_home_dir'),
+        version                 => hiera('dbinstance_version'),
+        user                    => hiera('oracle_os_user'),
+        group                   => hiera('oracle_os_group'),
+        downloadDir             => hiera('oracle_download_dir'),
+        action                  => 'create',
+        dbName                  => hiera('oracle_database_name'),
+        dbDomain                => hiera('oracle_database_domain_name'),
+        sysPassword             => hiera('oracle_database_sys_password'),
+        systemPassword          => hiera('oracle_database_system_password'),
+        template                => 'dbtemplate_11gR2_asm',
+        characterSet            => "AL32UTF8",
+        nationalCharacterSet    => "UTF8",
+        sampleSchema            => 'FALSE',
+        memoryPercentage        => "40",
+        memoryTotal             => "800",
+        databaseType            => "MULTIPURPOSE",
+        emConfiguration         => "NONE",
+        storageType             => "ASM",
+        asmSnmpPassword         => 'Welcome01',
+        asmDiskgroup            => 'DATA',
+        recoveryDiskgroup       => 'DATA',
+        recoveryAreaDestination => 'DATA',
+        require                 => Oradb::Opatch['19791420_db_patch_2'],
+      }
+
+      # or not based on a template
       oradb::database{ 'oraDb':
         oracleBase              => hiera('oracle_base_dir'),
         oracleHome              => hiera('oracle_home_dir'),
@@ -740,18 +857,18 @@ Tnsnames.ora
         systemPassword          => hiera('oracle_database_system_password'),
         characterSet            => "AL32UTF8",
         nationalCharacterSet    => "UTF8",
-        initParams              => "open_cursors=1000,processes=600,job_queue_processes=4",
         sampleSchema            => 'FALSE',
         memoryPercentage        => "40",
         memoryTotal             => "800",
         databaseType            => "MULTIPURPOSE",
+        emConfiguration         => "NONE",
         storageType             => "ASM",
         asmSnmpPassword         => 'Welcome01',
         asmDiskgroup            => 'DATA',
-        recoveryDiskgroup       => undef,
         recoveryAreaDestination => 'DATA',
         require                 => Oradb::Opatch['19791420_db_patch_2'],
       }
+
 
 
 ## Oracle Database Client
@@ -1089,21 +1206,24 @@ install the following module to set the database kernel parameters
 install the following module to set the database user limits parameters
 *puppet module install erwbgy-limits*
 
-      group { 'dba' :
-        ensure      => present,
-      }
+       $all_groups = ['oinstall','dba' ,'oper']
 
-      user { 'oracle' :
-        ensure      => present,
-        gid         => 'dba',
-        groups      => 'dba',
-        shell       => '/bin/bash',
-        password    => '$1$DSJ51vh6$4XzzwyIOk6Bi/54kglGk3.',
-        home        => "/home/oracle",
-        comment     => "This user oracle was created by Puppet",
-        require     => Group['dba'],
-        managehome  => true,
-      }
+       group { $all_groups :
+         ensure      => present,
+       }
+
+       user { 'oracle' :
+         ensure      => present,
+         uid         => 500,
+         gid         => 'oinstall',
+         groups      => ['oinstall','dba','oper'],
+         shell       => '/bin/bash',
+         password    => '$1$DSJ51vh6$4XzzwyIOk6Bi/54kglGk3.',
+         home        => "/home/oracle",
+         comment     => "This user oracle was created by Puppet",
+         require     => Group[$all_groups],
+         managehome  => true,
+       }
 
        sysctl { 'kernel.msgmnb':                 ensure => 'present', permanent => 'yes', value => '65536',}
        sysctl { 'kernel.msgmax':                 ensure => 'present', permanent => 'yes', value => '65536',}
@@ -1133,14 +1253,14 @@ install the following module to set the database user limits parameters
          use_hiera => false,
        }
 
-      $install = [ 'binutils.x86_64', 'compat-libstdc++-33.x86_64', 'glibc.x86_64','ksh.x86_64','libaio.x86_64',
+       $install = [ 'binutils.x86_64', 'compat-libstdc++-33.x86_64', 'glibc.x86_64','ksh.x86_64','libaio.x86_64',
                     'libgcc.x86_64', 'libstdc++.x86_64', 'make.x86_64','compat-libcap1.x86_64', 'gcc.x86_64',
                     'gcc-c++.x86_64','glibc-devel.x86_64','libaio-devel.x86_64','libstdc++-devel.x86_64',
                     'sysstat.x86_64','unixODBC-devel','glibc.i686','libXext.x86_64','libXtst.x86_64']
 
-      package { $install:
-        ensure  => present,
-      }
+       package { $install:
+         ensure  => present,
+       }
 
 ## Solaris 10 kernel, ulimits and required packages
 

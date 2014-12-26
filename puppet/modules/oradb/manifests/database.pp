@@ -34,6 +34,7 @@ define oradb::database(
   $asmDiskgroup             = 'DATA',
   $recoveryDiskgroup        = undef,
   $cluster_nodes            = undef,
+  $containerDatabase        = false, # 12.1 feature for pluggable database
 ){
   if (!( $version in ['11.2','12.1'])) {
     fail('Unrecognized version')
@@ -59,6 +60,10 @@ define oradb::database(
     fail('Unrecognized storageType')
   }
 
+  if ( $version == '11.2' and $containerDatabase == true ){
+    fail('container or pluggable database is not supported on version 11.2')
+  }
+
   $continue = true
 
   if ( $continue ) {
@@ -70,6 +75,16 @@ define oradb::database(
       default: {
         fail('Unrecognized operating system')
       }
+    }
+
+    if (is_hash($initParams) or is_string($initParams)) {
+      if is_hash($initParams) {
+        $sanitizedInitParams = join(join_keys_to_values($initParams, '='),',')
+      } else {
+        $sanitizedInitParams = $initParams
+      }
+    } else {
+      fail 'initParams only supports a String or a Hash as value type'
     }
 
     $sanitized_title = regsubst($title, '[^a-zA-Z0-9.-]', '_', 'G')
@@ -104,6 +119,7 @@ define oradb::database(
         before  => Exec["oracle database ${title}"],
       }
     }
+
 
     if $action == 'create' {
       if ( $template ) {
