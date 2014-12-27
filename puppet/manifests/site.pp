@@ -281,16 +281,16 @@ class oradb_asm {
     }
 
     oradb::opatchupgrade{'112000_opatch_upgrade_db':
-        oracleHome             => hiera('oracle_home_dir'),
-        patchFile              => 'p6880880_112000_Linux-x86-64.zip',
-        csiNumber              => undef,
-        supportId              => undef,
-        opversion              => '11.2.0.3.6',
-        user                   => hiera('oracle_os_user'),
-        group                  => hiera('oracle_os_group'),
-        downloadDir            => hiera('oracle_download_dir'),
-        puppetDownloadMntPoint => hiera('oracle_source'),
-        require                => Oradb::Installdb['db_linux-x64'],
+      oracleHome             => hiera('oracle_home_dir'),
+      patchFile              => 'p6880880_112000_Linux-x86-64.zip',
+      csiNumber              => undef,
+      supportId              => undef,
+      opversion              => '11.2.0.3.6',
+      user                   => hiera('oracle_os_user'),
+      group                  => hiera('oracle_os_group'),
+      downloadDir            => hiera('oracle_download_dir'),
+      puppetDownloadMntPoint => hiera('oracle_source'),
+      require                => Oradb::Installdb['db_linux-x64'],
     }
 
     oradb::opatch{'19791420_db_patch':
