@@ -1,8 +1,5 @@
 # Version updates
 
-## 1.0.27
-- Use internal hiera (ripienaar/module_data) for all common, Linux or Solaris environment settings
-
 ## 1.0.26
 - Removed createUser functionality in installdb & client, Puppet should do it instead of oradb module
 - Support for 12.1 pluggable database
