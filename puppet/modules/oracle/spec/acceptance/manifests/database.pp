@@ -111,7 +111,9 @@ class database{
     oracleHome             => $oracle_home,
     puppetDownloadMntPoint => '/software',
     remoteFile             => false,
-  }
+  }->
+
+  file{'/tmp': ensure => 'directory'} ->
 
   oradb::net{ 'config net8':
     oracleHome   => $oracle_home,

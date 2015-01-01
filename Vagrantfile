@@ -6,7 +6,7 @@ VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
-  config.vm.define "dbasm" , primary: true do |dbasm|
+  config.vm.define "dbasm", primary: true do |dbasm|
     dbasm.vm.box = "centos-6.6-x86_64"
     dbasm.vm.box_url = "https://dl.dropboxusercontent.com/s/ijt3ppej789liyp/centos-6.6-x86_64.box"
 
@@ -20,7 +20,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     dbasm.vm.synced_folder "/Users/edwin/software", "/software"
 
     dbasm.vm.network :private_network, ip: "10.10.10.7"
-#   dbasm.vm.network :private_network, ip: "192.168.33.100"
 
     dbasm.vm.provider :vmware_fusion do |vb|
       vb.vmx["numvcpus"] = "2"

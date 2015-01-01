@@ -1,11 +1,10 @@
 module OraUtils
 	class OraTab
 
-		DEFAULT_FILE		= "/etc/oratab"
 		ASM_REGXP 			= /^\+ASM\d*$/
 		NON_ASM_REGXP		= /^(?:(?!\+ASM\d*).)*$/
 
-		def initialize(file = DEFAULT_FILE)
+		def initialize(file = default_file)
 		  fail "oratab #{file} not found. Probably Oracle not installed" unless File.exists?(file)
 		  @oratab = file
 		end
@@ -66,5 +65,16 @@ module OraUtils
 	      line.start_with?('#') || line.start_with?("\n")
 	    end
 
+	    def default_file
+	    	case os
+	    	when 'Linux' then '/etc/oratab'
+	    	when 'SunOS' then '/var/opt/oracle/oratab'
+    		else fail 'unsupported OS'
+    		end
+	    end
+
+	    def os
+		    Facter.value(:kernel)	
+		  end
   end
 end

@@ -58,7 +58,7 @@ module Puppet
     property  :au_size
     property  :compat_asm
     property  :compat_rdbms
-    property  :failgroups
+    property  :disks
 
   end
 end

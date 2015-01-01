@@ -1,4 +1,4 @@
-newproperty(:failgroups) do
+newproperty(:disks) do
   include EasyType
   include ::OraUtils::OracleAccess
 
