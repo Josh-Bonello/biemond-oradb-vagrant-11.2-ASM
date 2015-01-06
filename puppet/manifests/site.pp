@@ -348,6 +348,8 @@ class oradb_asm {
       dbDomain                => hiera('oracle_database_domain_name'),
       sysPassword             => hiera('oracle_database_sys_password'),
       systemPassword          => hiera('oracle_database_system_password'),
+      # template                => 'my_dbtemplate_11gR2_asm',
+      # puppetDownloadMntPoint  => '/vagrant',
       template                => 'dbtemplate_11gR2_asm',
       characterSet            => 'AL32UTF8',
       nationalCharacterSet    => 'UTF8',
