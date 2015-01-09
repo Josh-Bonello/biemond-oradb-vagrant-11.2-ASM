@@ -160,5 +160,4 @@ define oradb::database(
       logoutput   => true,
     }
   }
-
 }
