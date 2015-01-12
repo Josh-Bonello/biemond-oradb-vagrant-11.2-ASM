@@ -21,13 +21,13 @@ module Puppet
     set_command(:asmcmd)
 
     to_get_raw_resources do
-      volume_info = asmcmd "volinfo -a"
+      volume_info = asmcmd("volinfo -a", :sid => sid)
       parser = OraUtils::AsmIndexParser.new(volume_info)
       parser.parse
     end
 
     on_create do | command_builder |
-      "volcreate -G #{diskgroup} -s #{size} #{volume_name}"
+      command_builder.add( "volcreate -G #{diskgroup} -s #{size} #{volume_name}", :sid => sid)
     end
 
     on_modify do | command_builder|
@@ -35,7 +35,7 @@ module Puppet
     end
 
     on_destroy do |command_builder|
-      "voldelete -G #{diskgroup} #{volume_name}"
+      command_builder.add("voldelete -G #{diskgroup} #{volume_name}", :sid => sid)
     end
 
     map_title_to_sid([:diskgroup, :chop.to_proc], :volume_name) { /^((.*\:)?(@?.*?)?(\@.*?)?)$/}

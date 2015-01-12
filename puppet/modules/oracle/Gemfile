@@ -17,7 +17,7 @@ group :development do
   gem 'pry-debugger'
   gem "travis"
   gem "travis-lint"
-  gem "beaker"
+  gem 'beaker', :github => 'puppetlabs/beaker', :branch => 'master', :ref => '74e7ffb5b9024d5c87833b0e4226517eb0860711'
   gem "beaker-rspec"
   gem "vagrant-wrapper"
   gem "puppet-blacksmith"

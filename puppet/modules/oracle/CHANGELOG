@@ -1,6 +1,14 @@
 History
 ========
 
+07-01-2015  version 1.1.0
+--------------------------
+- Cleaned up contents of distributed package
+- autorequire the oracle users tablespace
+- Some fixes and clarifications for ora_asm_diskgroup. BEWARE: The api has changed. Check the README for details.
+- Added support for oratab on Solaris.
+
+
 16-12-2014  version 1.0.0
 --------------------------
 - Fixed some bugs

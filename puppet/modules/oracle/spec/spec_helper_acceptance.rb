@@ -33,8 +33,6 @@ RSpec.configure do |c|
     # Install module and dependencies
 
     copy_module_to(master, :source => proj_root, :module_name => 'oracle')
-    # Required for mod_passenger tests.
-
 
     unless ENV['BEAKER_provision'] == 'no'
       modules = [

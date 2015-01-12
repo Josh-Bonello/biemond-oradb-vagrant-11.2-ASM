@@ -1,10 +1,11 @@
 require 'tempfile'
 require 'fileutils'
-require 'ora_utils/ora_daemon'
-require 'ora_utils/ora_tab'
+require 'ora_utils/sql'
 
 module OraUtils
   module OracleAccess
+
+    OS_USER_NAME = 'ASM_OS_USER'
 
     def self.included(parent)
       parent.extend(OracleAccess)
@@ -51,10 +52,11 @@ module OraUtils
     # @param command [String] this is the commands to be given
     #
     #
-    def sql( command, parameters = {})
-      sid = parameters.fetch(:sid) { fail "SID must be present"}
+    def sql( command, options = {})
+      @sql ||= OraUtils::Sql.new(options)
+      sid = options.fetch(:sid) { fail "SID must be present"}
       Puppet.debug "Executing: #{command} on database #{sid}"
-      csv_string = execute_sql(command, parameters)
+      csv_string = execute_sql(command, options)
       add_sid_to(convert_csv_data_to_hash(csv_string, [], :converters=> lambda {|f| f ? f.strip : nil}),sid)
     end
 
@@ -63,24 +65,9 @@ module OraUtils
       nil
     end
 
-    def execute_sql(command, parameters)
-      os_user = parameters.fetch(:os_user) { ENV['ORA_OS_USER'] || 'oracle'}
-      db_sid = parameters.fetch(:sid) { raise ArgumentError, "No sid specified"}
-      oratab = OraUtils::OraTab.new
-      raise ArgumentError, "sid #{db_sid} doesn't exist on node" unless oratab.valid_sid?(db_sid) 
-      username = parameters.fetch(:username) { 'sysdba'}
-      password = parameters[:password] # null allowd
-      daemon = OraDaemon.run(os_user, db_sid, username, password)
-      outFile = Tempfile.new([ 'output', '.csv' ])
-      outFile.close
-      FileUtils.chown(os_user, nil, outFile.path)
-      FileUtils.chmod(0644, outFile.path)
-      if timeout_specified
-        daemon.execute_sql_command(command, outFile.path, timeout_specified)
-      else
-        daemon.execute_sql_command(command, outFile.path)
-      end
-      File.read(outFile.path)
+    def execute_sql(command, options)
+      @sql = OraUtils::Sql.new( options)
+      @sql.execute(command)
     end
 
 
@@ -100,6 +87,12 @@ module OraUtils
     def sid_from_resource
       oratab = OraUtils::OraTab.new
       resource.sid.empty? ? oratab.default_sid : resource.sid
+    end
+
+    private
+
+    def default_asm_user
+      ENV[OS_USER_NAME] ||  Facter.value(OS_USER_NAME) || 'grid'
     end
 
 

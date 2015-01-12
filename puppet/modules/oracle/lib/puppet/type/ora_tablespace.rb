@@ -19,7 +19,7 @@ module Puppet
     ensurable
 
     to_get_raw_resources do
-      sql_on_all_sids(template('puppet:///modules/oracle/tablespace_index.sql', binding))
+      sql_on_all_sids(template('puppet:///modules/oracle/ora_tablespace/index.sql', binding))
     end
 
     on_create do | command_builder |

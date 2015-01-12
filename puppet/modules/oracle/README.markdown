@@ -262,6 +262,25 @@ ora_thread{"2@sid":
 
 This enables thread 2 on instance named `sid`
 
+###ora_database
+
+This type allows you to create a database. In one of it's simplest form:
+
+```puppet
+ora_database{'oradb':
+  ensure          => present,
+  oracle_base     => '/opt/oracle',
+  oracle_home     => '/opt/oracle/app/11.04',
+  control_file    => 'reuse',
+  create_catalog  => 'no',
+}
+```
+See the type documentation for all parameters.
+
+```sh
+$ puppet describe ora_database
+``
+
 ##Limitations
 
 This module is tested on Oracle 11 on CentOS and Redhat. It will probably work on other Linux distributions. It will definitely **not** work on Windows. As far as Oracle compatibility. Most of the sql commands's it creates under the hood are pretty much Oracle version independent. It should work on most Oracle versions.

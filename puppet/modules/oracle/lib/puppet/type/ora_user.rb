@@ -12,50 +12,53 @@ module Puppet
   # with the §Resource provider
   #
   newtype(:ora_user) do
-    include EasyType
-    include ::OraUtils::OracleAccess
-    extend ::OraUtils::TitleParser
 
-    desc %q{
-      This resource allows you to manage a user in an Oracle database.
-    }
+    class ::Puppet::Type::Ora_user
+      include EasyType
+      include ::OraUtils::OracleAccess
+      extend ::OraUtils::TitleParser
 
-    ensurable
+      desc %q{
+        This resource allows you to manage a user in an Oracle database.
+      }
 
-    set_command(:sql)
+      ensurable
 
-    to_get_raw_resources do
-      sql_on_all_sids "select * from dba_users"
+      set_command(:sql)
+
+      to_get_raw_resources do
+        sql_on_all_sids "select * from dba_users"
+      end
+
+      on_create do | command_builder |
+        statement = password ?  "create user #{username} identified by \"#{password}\""  : "create user #{username}"
+        command_builder.add(statement, :sid => sid)
+      end
+
+      on_modify do | command_builder |
+        command_builder.add("alter user #{username}", :sid => sid)
+      end
+
+      on_destroy do | command_builder |
+        command_builder.add("drop user #{username}", :sid => sid)
+      end
+
+
+      map_title_to_sid(:username) { /^((@?.*?)?(\@.*?)?)$/}
+
+      parameter :name
+      parameter :username
+      parameter :sid
+
+      property  :user_id
+      parameter :password
+      property  :default_tablespace
+      property  :temporary_tablespace
+      property  :quotas
+      property  :grants
+
+      autorequire (:ora_tablespace) {[default_tablespace, temporary_tablespace]}
+
     end
-
-    on_create do | command_builder |
-      statement = password ?  "create user #{username} identified by \"#{password}\""  : "create user #{username}"
-      command_builder.add(statement, :sid => sid)
-    end
-
-    on_modify do | command_builder |
-      command_builder.add("alter user #{username}", :sid => sid)
-    end
-
-    on_destroy do | command_builder |
-      command_builder.add("drop user #{username}", :sid => sid)
-    end
-
-
-    map_title_to_sid(:username) { /^((@?.*?)?(\@.*?)?)$/}
-
-    parameter :name
-    parameter :username
-    parameter :sid
-
-    property  :user_id
-    parameter :password
-    property  :default_tablespace
-    property  :temporary_tablespace
-    property  :quotas
-    property  :grants
-
-    autorequire (:ora_tablespace) {[default_tablespace, temporary_tablespace]}
-
   end
 end

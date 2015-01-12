@@ -28,11 +28,12 @@ class OraDaemon < EasyType::Daemon
   end
 
   def execute_sql_command(command, output_file, timeout = DEFAULT_TIMEOUT)
-    Puppet.debug "Executing sql-command #{command}"
+    Puppet.debug "Executing daemonized sql-command #{command}"
     connect_to_oracle
-    execute_command template('puppet:///modules/oracle/execute.sql.erb', binding)
+    execute_command template('puppet:///modules/oracle/shared/daemon_execute.sql.erb', binding)
     execute_command "prompt ~~~~COMMAND SUCCESFULL~~~~"
     sync(timeout) {|line| fail "Error in execution of SQL command: #{command}.\nFound error #{line}" if line =~ ORACLE_ERROR}
+    File.read(output_file)
   end
 
   private
@@ -53,7 +54,7 @@ class OraDaemon < EasyType::Daemon
     end
 
     def initial_setup
-      execute_command template('puppet:///modules/oracle/setup.sql.erb', binding)
+      execute_command template('puppet:///modules/oracle/shared/setup.sql.erb', binding)
     end
 
 end

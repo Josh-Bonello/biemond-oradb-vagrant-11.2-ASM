@@ -3,10 +3,55 @@ module OraUtils
 
 		ASM_REGXP 			= /^\+ASM\d*$/
 		NON_ASM_REGXP		= /^(?:(?!\+ASM\d*).)*$/
+		DEFAULT_CONTENT = <<-EOD
+		#
+		# This file is used by ORACLE utilities.  It is created by root.sh
+		# and updated by either Database Configuration Assistant while creating
+		# a database or ASM Configuration Assistant while creating ASM instance.
+
+		# A colon, ':', is used as the field terminator.  A new line terminates
+		# the entry.  Lines beginning with a pound sign, '#', are comments.
+		#
+		# Entries are of the form:
+		#   $ORACLE_SID:$ORACLE_HOME:<N|Y>:
+		#
+		# The first and second fields are the system identifier and home
+		# directory of the database respectively.  The third filed indicates
+		# to the dbstart utility that the database should , "Y", or should not,
+		# "N", be brought up at system boot time.
+		#
+		# Multiple entries with the same $ORACLE_SID are not allowed.
+		#
+		#
+		EOD
 
 		def initialize(file = default_file)
 		  fail "oratab #{file} not found. Probably Oracle not installed" unless File.exists?(file)
 		  @oratab = file
+		end
+
+		def add_new_entry(sid, home, start)
+			write( append_new_entry(sid, home, start))
+		end
+
+		def ensure_entry(sid, home, start)
+			unless valid_sid?(sid)
+				add_new_entry(sid, home, start)
+			end
+		end
+
+		def append_new_entry(sid, home, start)
+			new_content = "#{oratab_content}\n#{sid}:#{home}:#{start}"
+		end
+
+		def write(content)
+			File.open(default_file, 'w') {|f| f.write(content)}
+		end
+
+		def oratab_content
+			File.open(default_file) {|f| f.read}
+		rescue Errno::ENOENT
+			DEFAULT_CONTENT
 		end
 
 		def entries
@@ -57,7 +102,7 @@ module OraUtils
 	  end
 
 	  def default_sid
-	    database_sids.first
+	    database_sids.first || ''
 	  end
 
 	  private
