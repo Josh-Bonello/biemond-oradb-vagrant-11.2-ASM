@@ -2,8 +2,10 @@
 #
 #  prepare autostart of the nodemanager for linux
 #
-class oradb::prepareautostart
-{
+class oradb::prepareautostart(
+  $oracle_home  = undef,
+  $user        = 'oracle'
+){
   $execPath = '/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:'
 
   case $::kernel {
@@ -31,7 +33,7 @@ class oradb::prepareautostart
         command   => 'chkconfig --add dbora',
         require   => File['/etc/init.d/dbora'],
         user      => 'root',
-        unless    => 'chkconfig | /bin/grep \'dbora\'',
+        unless    => 'chkconfig --list | /bin/grep \'dbora\'',
         path      => $execPath,
         logoutput => true,
       }
