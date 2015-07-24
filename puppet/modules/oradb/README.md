@@ -274,7 +274,7 @@ or
     oradb::installdb{ '112010_Linux-x86-64':
       version       => '11.2.0.1',
       file          => 'linux.x64_11gR2_database',
-      database_type => 'SE',
+      DATABASETYPE => 'SE',
       oracle_base   => '/oracle',
       oracle_home   => '/oracle/product/11.2/db',
       user          => 'oracle',
