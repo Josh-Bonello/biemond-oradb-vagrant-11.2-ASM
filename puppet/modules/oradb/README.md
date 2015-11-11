@@ -5,6 +5,8 @@ created by Edwin Biemond
 [biemond.blogspot.com](http://biemond.blogspot.com)
 [Github homepage](https://github.com/biemond/puppet)
 
+With version >= 2.0.0  all manifest parameters are in lowercase and in snakestyle instead of camelcase
+
 Dependency with
 - puppetlabs/concat >= 1.0.0
 - puppetlabs/stdlib >= 3.2.0
@@ -12,6 +14,7 @@ Dependency with
 Should work on Docker, for Solaris and on all Linux version like RedHat, CentOS, Ubuntu, Debian, Suse SLES or OracleLinux
 - Docker image of Oracle Database 12.1 SE [Docker Oracle Database 12.1.0.1](https://github.com/biemond/docker-database-puppet)
 - CentOS 6.5 vagrant box with Oracle Database 12.1 and Enterprise Manager 12.1.0.4 [Enterprise vagrant box](https://github.com/biemond/biemond-em-12c)
+- CentOS 6.6 vagrant box with Oracle Database 12.1.0.2 on NFS ASM [ASM vagrant box](https://github.com/biemond/biemond-oradb-vagrant-12.1-ASM)
 - CentOS 6.6 vagrant box with Oracle Database 11.2.0.4 on NFS ASM [ASM vagrant box](https://github.com/biemond/biemond-oradb-vagrant-11.2-ASM)
 - CentOS 6.6 vagrant box with Oracle Database 12.1.0.1 with pluggable databases [12c pluggable db vagrant box](https://github.com/biemond/biemond-oradb-vagrant-12.1-CDB)
 - Solaris 11.2 vagrant box with Oracle Database 12.1 [solaris 11.2 vagrant box](https://github.com/biemond/biemond-oradb-vagrant-12.1-solaris11.2)
@@ -274,7 +277,7 @@ or
     oradb::installdb{ '112010_Linux-x86-64':
       version       => '11.2.0.1',
       file          => 'linux.x64_11gR2_database',
-      DATABASETYPE => 'SE',
+      DATABASETYPE  => 'SE',
       oracle_base   => '/oracle',
       oracle_home   => '/oracle/product/11.2/db',
       user          => 'oracle',
@@ -322,6 +325,26 @@ Opatch
     }
 
 or for clusterware aka opatch auto
+
+to use the new opatchauto utility(12.1) instead of opatch auto(11.2) use this parameter use_opatchauto_utility => true
+
+    oradb::opatch{'21523260_grid_patch':
+      ensure                    => 'present',
+      oracle_product_home       => hiera('grid_home_dir'),
+      patch_id                  => '21523260',
+      patch_file                => 'p21523260_121020_Linux-x86-64.zip',
+      clusterware               => true,
+      use_opatchauto_utility    => true,
+      bundle_sub_patch_id       => '21359755', # sub patch_id of bundle patch ( else I can't detect it)
+      user                      => hiera('grid_os_user'),
+      group                     => 'oinstall',
+      download_dir              => hiera('oracle_download_dir'),
+      ocmrf                     => true,
+      puppet_download_mnt_point => hiera('oracle_source'),
+      require                   => Oradb::Opatchupgrade['121000_opatch_upgrade_asm'],
+    }
+
+the old way (11g)
 
     oradb::opatch{'18706472_grid_patch':
       ensure                    => 'present',
@@ -455,8 +478,8 @@ Database instance
       character_set             => "AL32UTF8",
       nationalcharacter_set     => "UTF8",
       init_params               => {'open_cursors'        => '1000',
-                                  'processes'           => '600',
-                                  'job_queue_processes' => '4' },
+                                    'processes'           => '600',
+                                    'job_queue_processes' => '4' },
       sample_schema             => 'TRUE',
       memory_percentage         => "40",
       memory_total              => "800",
@@ -988,6 +1011,7 @@ Tnsnames.ora
       group                     => 'dba',
       group_install             => 'oinstall',
       download_dir              => '/install',
+      bash_profile              => true,
       remote_file               => true,
       puppet_download_mnt_point => "puppet:///modules/oradb/",
       logoutput                 => true,
@@ -996,7 +1020,7 @@ Tnsnames.ora
 or
 
     oradb::client{ '11.2.0.1_Linux-x86-64':
-      version                    => '11.2.0.1',
+      version                   => '11.2.0.1',
       file                      => 'linux.x64_11gR2_client.zip',
       oracle_base               => '/oracle',
       oracle_home               => '/oracle/product/11.2/client',
@@ -1004,6 +1028,7 @@ or
       group                     => 'dba',
       group_install             => 'oinstall',
       download_dir              => '/install',
+      bash_profile              => true,
       remote_file               => false,
       puppet_download_mnt_point => "/software",
       logoutput                 => true,
@@ -1149,18 +1174,18 @@ In combination with the oracle puppet module from hajee you can create/change a 
       }
 
       oradb::goldengate{ 'ggate12.1.2':
-        version                  => '12.1.2',
-        file                     => '121200_fbo_ggs_Linux_x64_shiphome.zip',
-        database_type            => 'Oracle',
-        database_version         => 'ORA11g',
-        database_home            => '/oracle/product/12.1/db',
-        oracle_base              => '/oracle',
-        goldengate_home          => "/oracle/product/12.1/ggate",
-        manager_port             => 16000,
-        user                     => 'ggate',
-        group                    => 'dba',
-        group_install            => 'oinstall',
-        download_dir             => '/install',
+        version                   => '12.1.2',
+        file                      => '121200_fbo_ggs_Linux_x64_shiphome.zip',
+        database_type             => 'Oracle',
+        database_version          => 'ORA11g',
+        database_home             => '/oracle/product/12.1/db',
+        oracle_base               => '/oracle',
+        goldengate_home           => "/oracle/product/12.1/ggate",
+        manager_port              => 16000,
+        user                      => 'ggate',
+        group                     => 'dba',
+        group_install             => 'oinstall',
+        download_dir              => '/install',
         puppet_download_mnt_point => hiera('oracle_source'),
         require                   => User['ggate'],
       }
@@ -1212,19 +1237,19 @@ RCU examples
 soa suite repository
 
     oradb::rcu{'DEV_PS6':
-      rcu_file          => 'ofm_rcu_linux_11.1.1.7.0_32_disk1_1of1.zip',
-      product          => 'soasuite',
-      version          => '11.1.1.7',
-      oracle_home       => '/oracle/product/11.2/db',
-      user             => 'oracle',
-      group            => 'dba',
-      download_dir      => '/install',
-      action           => 'create',
-      db_server         => 'dbagent1.alfa.local:1521',
-      db_service        => 'test.oracle.com',
-      sys_password      => 'Welcome01',
-      schema_prefix     => 'DEV',
-      reposPassword    => 'Welcome02',
+      rcu_file       => 'ofm_rcu_linux_11.1.1.7.0_32_disk1_1of1.zip',
+      product        => 'soasuite',
+      version        => '11.1.1.7',
+      oracle_home    => '/oracle/product/11.2/db',
+      user           => 'oracle',
+      group          => 'dba',
+      download_dir   => '/install',
+      action         => 'create',
+      db_server      => 'dbagent1.alfa.local:1521',
+      db_service     => 'test.oracle.com',
+      sys_password   => 'Welcome01',
+      schema_prefix  => 'DEV',
+      repos_password => 'Welcome02',
     }
 
 webcenter repository with a fixed temp tablespace
@@ -1279,7 +1304,7 @@ OIM, OAM repository, OIM needs an Oracle Enterprise Edition database
       db_service                => 'oim.oracle.com',
       sys_password              => hiera('database_test_sys_password'),
       schema_prefix             => 'DEV',
-      reposPassword             => hiera('database_test_rcu_dev_password'),
+      repos_password            => hiera('database_test_rcu_dev_password'),
       puppet_download_mnt_point => $puppet_download_mnt_point,
       logoutput                 => true,
       require                   => Oradb::Dbactions['start oimDb'],
