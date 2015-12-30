@@ -367,14 +367,66 @@ class oradb_asm {
                                     Ora_asm_diskgroup['RECO@+ASM'],],
     }
 
+    oradb::dbactions{ 'start grid':
+      db_type                 => 'grid',
+      oracle_home             => hiera('oracle_home_dir'),
+      grid_home               => hiera('grid_home_dir'),
+      user                    => hiera('grid_os_user'),
+      group                   => hiera('oracle_os_group'),
+      action                  => 'start',
+      db_name                 => '+ASM',
+      require                 => Oradb::Database['oraDb'],
+    }
+
     oradb::dbactions{ 'start oraDb':
       oracle_home             => hiera('oracle_home_dir'),
       user                    => hiera('oracle_os_user'),
       group                   => hiera('oracle_os_group'),
       action                  => 'start',
       db_name                 => hiera('oracle_database_name'),
-      require                 => Oradb::Database['oraDb'],
+      require                 => Oradb::Dbactions['start grid'],
     }
+
+    # oradb::dbactions{ 'stop oraDb':
+    #   oracle_home             => hiera('oracle_home_dir'),
+    #   user                    => hiera('oracle_os_user'),
+    #   group                   => hiera('oracle_os_group'),
+    #   action                  => 'stop',
+    #   db_name                 => hiera('oracle_database_name'),
+    #   require                 => Oradb::Database['oraDb'],
+    # }
+
+    # oradb::dbactions{ 'stop grid':
+    #   db_type                 => 'grid',
+    #   oracle_home             => hiera('oracle_home_dir'),
+    #   grid_home               => hiera('grid_home_dir'),
+    #   user                    => hiera('grid_os_user'),
+    #   group                   => hiera('oracle_os_group'),
+    #   action                  => 'stop',
+    #   db_name                 => '+ASM',
+    #   require                 => Oradb::Dbactions['stop oraDb'],
+    # }
+
+
+    # db_control{'instance control asm':
+    #   provider                => 'srvctl',
+    #   ensure                  => 'start',
+    #   instance_name           => '+ASM',
+    #   oracle_product_home_dir => hiera('oracle_home_dir'),
+    #   grid_product_home_dir   => hiera('grid_home_dir'),
+    #   os_user                 => hiera('grid_os_user'),
+    #   db_type                 => 'grid',
+    #   require                 => Oradb::Database['oraDb'],
+    # }
+
+    # db_control{'instance control db':
+    #   ensure                  => 'start',
+    #   instance_name           => hiera('oracle_database_name'),
+    #   oracle_product_home_dir => hiera('oracle_home_dir'),
+    #   os_user                 => hiera('oracle_os_user'),
+    #   require                 => Db_control["instance control asm"],
+    # }
+
 
     oradb::autostartdatabase{ 'autostart oracle':
       oracle_home             => hiera('oracle_home_dir'),
